@@ -1,6 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy_serializer import SerializerMixin
-from models.dbmodels import db
+from dbmodels import db
 
 class LeaseAgreement(db.Model, SerializerMixin):
     __tablename__ = 'lease_agreements'

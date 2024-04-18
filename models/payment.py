@@ -1,6 +1,7 @@
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy_serializer import SerializerMixin
-from models.dbmodels import db
+# from models.dbmodels import db
+from dbmodels import db
 
 class Payment(db.Model, SerializerMixin):
     __tablename__ = 'payments'
