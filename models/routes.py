@@ -8,19 +8,21 @@ def user_login():
     data = request.get_json()
     username = data.get('username')
     password = data.get('password')
+    role = data.get('role')  # Add role parameter
 
-    token = login(username, password)
+    token = login(username, password, role)  # Pass role to the login function
     if token:
         return jsonify({'token': token})
-    return jsonify({'message': 'Invalid username or password'}), 401
+    return jsonify({'message': 'Invalid username, password, or role'}), 401
 
 @routes.route('/signup', methods=['POST'])
 def user_signup():
     data = request.get_json()
     username = data.get('username')
     password = data.get('password')
+    role = data.get('role')  # Add role parameter
 
-    return signup(username, password)
+    return signup(username, password, role)  # Pass role to the signup function
 
 @routes.route('/protected', methods=['GET'])
 def protected_route():
