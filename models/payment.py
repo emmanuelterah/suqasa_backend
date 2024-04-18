@@ -18,7 +18,7 @@
 from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
-# from dbmodels import db
+from dbmodels import db
 
 class Payment(db.Model):
     id = db.Column(db.Integer, primary_key=True)

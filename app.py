@@ -45,7 +45,7 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from models.expense import Expense
 from models.staff import Staff
-from models.lease_agreement import LeaseAgreement
+from models.lease_agreement import LeaseAgreementg
 from models.maintenance import MaintenanceRequest
 from models.payment import Payment
 from models.property import Property
