@@ -2,12 +2,12 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy_serializer import SerializerMixin
 from models.dbmodels import db
 
-class Payment(db.models, SerializerMixin):
-    __tablename__ = 'payment'
+class Payment(db.Model, SerializerMixin):
+    __tablename__ = 'payments'
 
     PaymentID = db.Column(db.Integer, primary_key=True)
-    LeaseID = db.Column(db.Integer, db.ForeignKey('lease_agreement.LeaseID'))
-    TenantID = db.Column(db.Integer, db.ForeignKey('tenant.TenantID'))
+    LeaseID = db.Column(db.Integer, db.ForeignKey('lease_agreements.LeaseID'))
+    TenantID = db.Column(db.Integer, db.ForeignKey('tenants.TenantID'))
     PaymentDate = db.Column(db.Date)
     PaymentAmount = db.Column(db.Float)
     PaymentMethod = db.Column(db.String)

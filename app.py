@@ -8,8 +8,12 @@ from dotenv import load_dotenv
 load_dotenv()
 import os
 
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+DATABASE = os.environ.get(
+    "DB_URI", f"sqlite:///{os.path.join(BASE_DIR, 'app.db')}")
+
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URI')
+app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.json.compact = False
 
@@ -20,3 +24,7 @@ db.init_app(app)
 @app.route('/')
 def home():
     return '<h1>Property management</h1>'
+
+
+if __name__ == '__main__':
+    app.run(port=5555, debug=True)
