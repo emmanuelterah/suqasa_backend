@@ -1,0 +1,10 @@
+alembic
+Flask
+Flask_Bcrypt
+Flask_Cors
+Flask_Migrate
+flask_sqlalchemy
+ipdb
+python-dotenv
+SQLAlchemy
+SQLAlchemy_serializer
