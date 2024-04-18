@@ -1,1 +1,9 @@
+alembic
+Flask
+Flask_Migrate
+flask_sqlalchemy
+ipdb
+python-dotenv
+SQLAlchemy
+SQLAlchemy_serializer
 gunicorn
