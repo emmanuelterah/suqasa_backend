@@ -1,11 +1,12 @@
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy_serializer import SerializerMixin
-from dbmodels import db
+from models.dbmodels import db
 
 class Property (db.Model, SerializerMixin):
     __tablename__ = 'properties'
     
     serialize_only = ('id', 'name', 'image')
+    from models.dbmodels import db
     
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
@@ -27,4 +28,4 @@ class Property (db.Model, SerializerMixin):
         return f'<Property {self.id}, {self.name}, {self.image}>'
 
     
-
+from models.dbmodels import db
