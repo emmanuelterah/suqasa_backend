@@ -5,7 +5,7 @@ from models.dbmodels import db
 class Property (db.Model, SerializerMixin):
     __tablename__ = 'properties'
     
-    serialize_only = ('id')
+    serialize_only = ('id', 'name', 'image')
     
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
@@ -21,6 +21,10 @@ class Property (db.Model, SerializerMixin):
     landlord = db.relationship("Landlord", back_populates="properties")
     leases = db.relationship("LeaseAgreement", back_populates="property")
     maintenance_requests = db.relationship("MaintenanceRequest", back_populates="property")
+    
+    
+    def __repr__(self):
+        return f'<Property {self.id}, {self.name}, {self.image}>'
 
     
 
