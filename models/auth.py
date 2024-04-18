@@ -19,18 +19,18 @@ def hash_password(password):
 def verify_password(hashed_password, password):
     return bcrypt.checkpw(password.encode('utf-8'), hashed_password)
 
-def login(username, password):
+def login(username, password, role):
     for user in users:
-        if user['username'] == username and verify_password(user['password'], password):
+        if user['username'] == username and user['role'] == role and verify_password(user['password'], password):
             return generate_token(username)
     return None
 
-def signup(username, password):
+def signup(username, password, role):
     if any(user['username'] == username for user in users):
         return jsonify({'message': 'Username already exists!'}), 400
 
     hashed_password = hash_password(password)
-    users.append({'username': username, 'password': hashed_password})
+    users.append({'username': username, 'password': hashed_password, 'role': role})
     return jsonify({'message': 'User registered successfully!'}), 201
 
 def verify_token(token):
