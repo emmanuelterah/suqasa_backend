@@ -51,12 +51,14 @@ from models.payment import Payment
 from models.property import Property
 from models.tenant import Tenant
 from flask_migrate import Migrate
+from flask import Flask
+from models.routes import routes
 
 
 app = Flask(__name__)
+app.register_blueprint(routes)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 db = SQLAlchemy(app)
-
 Migrate(app, db)
 # Define your routes and other application logic here
 
@@ -76,6 +78,8 @@ if __name__ == '__main__':
 
 # # Import your models to create tables
 # # import models.dbmodels
+
+
 
 # if __name__ == '__main__':
 #     with app.app_context():
