@@ -5,6 +5,7 @@ from sqlalchemy.exc import IntegrityError
 from flask_migrate import Migrate
 from models.dbmodels import db
 
+
 from models.property import Property
 from models.landlord import Landlord
 from models.tenant import Tenant
