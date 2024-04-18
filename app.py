@@ -3,7 +3,7 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import IntegrityError
 from flask_migrate import Migrate
-from models.dbmodels import db, Property, Landlord, Tenant, LeaseAgreement, MaintenanceRequest, Payment
+from models.dbmodels import db, Property, Landlord, Tenant,  MaintenanceRequest, Payment
 from dotenv import load_dotenv
 load_dotenv()
 import os
