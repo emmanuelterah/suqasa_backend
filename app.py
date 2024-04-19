@@ -537,11 +537,13 @@ from flask_cors import CORS
 from functools import wraps
 from dotenv import load_dotenv
 from models.user import db, User
-from models.dbmodels import db
+# from models.dbmodels import db
 from models.tenant import Tenant
 from models.property import Property
 from models.landlord import Landlord
 from models.payment import Payment
+from models.lease_agreement import LeaseAgreement
+from models.maintenance import MaintenanceRequest
 import jwt
 import os
 

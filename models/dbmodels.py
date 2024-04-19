@@ -1,6 +1,7 @@
 from flask_sqlalchemy import SQLAlchemy
+from .user import db
 
-db = SQLAlchemy()
+# db = SQLAlchemy()
 
 from models.property import Property
 from models.landlord import Landlord
