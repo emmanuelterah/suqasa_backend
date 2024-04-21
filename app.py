@@ -6,8 +6,6 @@ from models.lease_agreement import LeaseAgreement
 from models.maintenance import MaintenanceRequest
 from models.payment import Payment
 from models.tenant import Tenant
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.exc import IntegrityError
 from flask_migrate import Migrate
 from datetime import datetime
 from flask_cors import CORS
