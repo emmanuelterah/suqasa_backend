@@ -1,14 +1,11 @@
-alembic
-Flask_Bcrypt
-Flask_Cors
-Flask_Migrate
-flask_sqlalchemy
-ipdb
-python-dotenv
-SQLAlchemy
-gunicorn
+# alembic
+# Flask_Bcrypt
+# Flask_Cors
+# Flask_Migrate
+# flask_sqlalchemy
+# ipdb
+# python-dotenv
+# SQLAlchemy
+SQLAlchemy_serializer
+gunicorn == 20.1.0
 psycopg2
-Flask
-sqlalchemy-serializer
-
-
