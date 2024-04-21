@@ -66,6 +66,22 @@ def create_landlord():
         "Address": new_landlord.Address
     }), 201 
 
+@app.route("/landlords/<int:id>", methods=['PUT'])
+def update_landlord_by_id(id):
+    try:
+        landlord = Landlord.query.get(id)
+        if landlord:
+            data = request.json
+            landlord.Name = data.get('Name', landlord.Name)
+            landlord.ContactInfo = data.get('ContactInfo', landlord.ContactInfo)
+            landlord.BankAcctInfo = data.get('BankAcctInfo', landlord.BankAcctInfo)
+            landlord.Address = data.get('Address', landlord.Address)
+            db.session.commit()
+            return jsonify({'message': 'Landlord updated successfully'}), 200
+        else:
+            return jsonify({"error": "Landlord not found"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 # @app.route("/landlords/<int:id>", methods=['GET'])
 # def get_landlord(id):
 #     landlord = Landlord.query.get_or_404(id)
@@ -170,27 +186,46 @@ def delete_property(id):
 #     return jsonify({'message': 'Property deleted successfully'}), 200
 
 # Routes for Tenant
-@app.route("/tenants", methods=['GET'])
-def get_tenants():
-    tenants = Tenant.query.all()
-    tenant_data = [
-        {
-            "TenantID": tenant.TenantID,
-            "Name": tenant.Name,
-            "ContactInfo": tenant.ContactInfo,
-            "Occupation": tenant.Occupation,
-            "CurrentAddr": tenant.CurrentAddr,
-            "PrevAddr": tenant.PrevAddr,
-            "EmergencyCnt": tenant.EmergencyCnt
-        }
-        for tenant in tenants
-    ]
-    return jsonify(tenant_data), 200
+# @app.route("/tenants", methods=['GET'])
+# def get_tenants():
+#     tenants = Tenant.query.all()
+#     tenant_data = [
+#         {
+#             "TenantID": tenant.TenantID,
+#             "Name": tenant.Name,
+#             "ContactInfo": tenant.ContactInfo,
+#             "Occupation": tenant.Occupation,
+#             "CurrentAddr": tenant.CurrentAddr,
+#             "PrevAddr": tenant.PrevAddr,
+#             "EmergencyCnt": tenant.EmergencyCnt
+#         }
+#         for tenant in tenants
+#     ]
+#     return jsonify(tenant_data), 200
 
-@app.route("/tenants/<int:id>", methods=['GET'])
-def get_tenant(id):
-    tenant = Tenant.query.get_or_404(id)
-    return jsonify(tenant.serialize()), 200
+# @app.route("/tenants/<int:id>", methods=['GET'])
+# def get_tenant(id):
+#     tenant = Tenant.query.get_or_404(id)
+#     return jsonify(tenant.serialize()), 200
+@app.route('/tenants', methods=['GET'])
+def get_tenants():
+    try:
+        tenants = Tenant.query.all()
+        tenant_data = [
+            {
+                "TenantID": tenant.TenantID,
+                "Name": tenant.Name,
+                "ContactInfo": tenant.ContactInfo,
+                "Occupation": tenant.Occupation,
+                "CurrentAddr": tenant.CurrentAddr,
+                "PrevAddr": tenant.PrevAddr,
+                "EmergencyCnt": tenant.EmergencyCnt
+            }
+            for tenant in tenants
+        ]
+        return jsonify(tenant_data), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route("/tenants", methods=['POST'])
 def create_tenant():
@@ -437,7 +472,69 @@ def delete_maintenance_request(id):
     else:
         return jsonify({"error": "Maintenance Request not found"}), 404
     
-@app.route("/maintenance_request/<int:id>", methods=['PUT'])
+# @app.route("/maintenance_request/<int:id>", methods=['PUT'])
+# def update_maintenance_request_by_id(id):
+#     try:
+#         maintenance_request = MaintenanceRequest.query.get(id)
+#         if maintenance_request:
+#             data = request.json
+#             maintenance_request.PropertyID = data.get('PropertyID', maintenance_request.PropertyID)
+#             maintenance_request.Description = data.get('Description', maintenance_request.Description)
+#             maintenance_request.RequestDate = datetime.strptime(data.get('RequestDate', maintenance_request.RequestDate), "%Y-%m-%d")
+#             maintenance_request.RequestedBy = data.get('RequestedBy', maintenance_request.RequestedBy)
+#             maintenance_request.Status = data.get('Status', maintenance_request.Status)
+#             maintenance_request.AssignedStaff = data.get('AssignedStaff', maintenance_request.AssignedStaff)
+#             maintenance_request.CompletionDate = datetime.strptime(data.get('CompletionDate', maintenance_request.CompletionDate), "%Y-%m-%d")
+#             db.session.commit()
+#             return jsonify({'message': 'Maintenance request updated successfully'}), 200
+#         else:
+#             return jsonify({"error": "Maintenance request not found"}), 404
+#     except Exception as e:
+#         return jsonify({"error": str(e)}), 500
+    
+# @app.route("/maintenance_request/<int:id>", methods=['PUT'])    
+# def update_maintenance_request_by_id(id):
+#     try:
+#         maintenance_request = MaintenanceRequest.query.get(id)
+#         if maintenance_request:
+#             data = request.json
+#             maintenance_request.AssignedStaff = data.get('AssignedStaff', maintenance_request.AssignedStaff)
+#             maintenance_request.CompletionDate = datetime.strptime(data.get('CompletionDate', maintenance_request.CompletionDate), "%Y-%m-%d")
+#             maintenance_request.Description = data.get('Description', maintenance_request.Description)
+#             maintenance_request.PropertyID = data.get('PropertyID', maintenance_request.PropertyID)
+#             maintenance_request.RequestDate = datetime.strptime(data.get('RequestDate', maintenance_request.RequestDate), "%Y-%m-%d")
+#             maintenance_request.RequestID = data.get('RequestID', maintenance_request.RequestID)
+#             maintenance_request.RequestedBy = data.get('RequestedBy', maintenance_request.RequestedBy)
+#             maintenance_request.Status = data.get('Status', maintenance_request.Status)
+#             db.session.commit()
+#             return jsonify({'message': 'Maintenance request updated successfully'}), 200
+#         else:
+#             return jsonify({"error": "Maintenance request not found"}), 404
+#     except Exception as e:
+#         return jsonify({"error": str(e)}), 500
+    
+
+# @app.route("/maintenance_requests/<int:id>", methods=['PUT'])
+# def update_maintenance_request_by_id(id):
+#     try:
+#         maintenance_request = MaintenanceRequest.query.get(id)
+#         if maintenance_request:
+#             data = request.json
+#             maintenance_request.PropertyID = data.get('PropertyID', maintenance_request.PropertyID)
+#             maintenance_request.Description = data.get('Description', maintenance_request.Description)
+#             maintenance_request.RequestDate = datetime.strptime(data.get('RequestDate', maintenance_request.RequestDate), "%Y-%m-%d")
+#             maintenance_request.RequestedBy = data.get('RequestedBy', maintenance_request.RequestedBy)
+#             maintenance_request.Status = data.get('Status', maintenance_request.Status)
+#             maintenance_request.AssignedStaff = data.get('AssignedStaff', maintenance_request.AssignedStaff)
+#             maintenance_request.CompletionDate = datetime.strptime(data.get('CompletionDate', maintenance_request.CompletionDate), "%Y-%m-%d") if data.get('CompletionDate') else None
+#             db.session.commit()
+#             return jsonify({'message': 'Maintenance request updated successfully'}), 200
+#         else:
+#             return jsonify({"error": "Maintenance request not found"}), 404
+#     except Exception as e:
+#         return jsonify({"error": str(e)}), 500
+    
+@app.route("/maintenance_requests/<int:id>", methods=['PUT'])
 def update_maintenance_request_by_id(id):
     try:
         maintenance_request = MaintenanceRequest.query.get(id)
@@ -449,7 +546,11 @@ def update_maintenance_request_by_id(id):
             maintenance_request.RequestedBy = data.get('RequestedBy', maintenance_request.RequestedBy)
             maintenance_request.Status = data.get('Status', maintenance_request.Status)
             maintenance_request.AssignedStaff = data.get('AssignedStaff', maintenance_request.AssignedStaff)
-            maintenance_request.CompletionDate = datetime.strptime(data.get('CompletionDate', maintenance_request.CompletionDate), "%Y-%m-%d")
+            completion_date = data.get('CompletionDate')
+            if completion_date:
+                maintenance_request.CompletionDate = datetime.strptime(completion_date, "%Y-%m-%d")
+            else:
+                maintenance_request.CompletionDate = None
             db.session.commit()
             return jsonify({'message': 'Maintenance request updated successfully'}), 200
         else:
