@@ -8,4 +8,18 @@ name = "pypi"
 [dev-packages]
 
 [requires]
-python_version = "3.10"
+alembic
+Flask_Bcrypt
+Flask_Cors
+Flask_Migrate
+flask_sqlalchemy
+ipdb
+python-dotenv
+SQLAlchemy
+gunicorn
+psycopg2
+Flask
+sqlalchemy-serializer
+
+python_version = "*"
+
