@@ -3,6 +3,7 @@ from sqlalchemy_serializer import SerializerMixin
 
 class Property(db.Model, SerializerMixin):
     __tablename__ = 'properties'
+    
     serialize_only = ('id', 'name', 'address', 'description','Bedrooms','image','Size','RentAmount','Status', 'LandlordID')
     
     id = db.Column(db.Integer, primary_key=True)

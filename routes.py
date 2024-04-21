@@ -112,21 +112,6 @@ def update_landlord_by_id(id):
 #     return jsonify({'message': 'Landlord deleted successfully'}), 200
 
 # Routes for Property
-# @app.route("/properties", methods=['GET'])
-# def get_properties():
-#     properties = Property.query.all()
-#     property_data = [
-#         {
-#             "id": property.id,
-#             "name": property.name,
-#             "address": property.address,
-#             # Add other fields as needed
-#         }
-#         for property in properties
-#     ]
-#     return jsonify(property_data), 200
-    
-
 @app.route("/properties", methods=['GET'])
 def get_properties():
     properties = Property.query.all()
@@ -135,32 +120,12 @@ def get_properties():
             "id": property.id,
             "name": property.name,
             "address": property.address,
-            "description": property.description,
-            "Bedrooms": property.Bedrooms,
-            "image": property.image,
-            "Size": property.Size,
-            "RentAmount": property.RentAmount,
-            "Status": property.Status,
-            "LandlordID": property.LandlordID,
+            # Add other fields as needed
         }
         for property in properties
     ]
     return jsonify(property_data), 200
 
-# @app.route("/properties/<int:id>", methods=['GET'])
-# def get_property_by_id(id):
-#     property = Property.query.get_or_404(id)
-#     return jsonify({
-#         "id": property.id,
-#         "name": property.name,
-#         "address": property.address,
-#         "description": property.description,
-#         "Bedrooms": property.Bedrooms,
-#         "Size": property.Size,
-#         "RentAmount": property.RentAmount,
-#         "Status": property.Status,
-#         "LandlordID": property.LandlordID
-    # }), 200
 @app.route("/properties/<int:id>", methods=['GET'])
 def get_property_by_id(id):
     property = Property.query.get_or_404(id)
@@ -170,13 +135,11 @@ def get_property_by_id(id):
         "address": property.address,
         "description": property.description,
         "Bedrooms": property.Bedrooms,
-        "image": property.image,  # Include image field
         "Size": property.Size,
         "RentAmount": property.RentAmount,
         "Status": property.Status,
         "LandlordID": property.LandlordID
     }), 200
-
 
 @app.route("/properties", methods=['POST'])
 def create_property():

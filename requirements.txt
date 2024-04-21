@@ -8,3 +8,5 @@ ipdb
 python-dotenv
 SQLAlchemy
 SQLAlchemy_serializer
+gunicorn
+psycopg2

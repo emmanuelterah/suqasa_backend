@@ -7,12 +7,16 @@ from models.maintenance import MaintenanceRequest
 from models.payment import Payment
 from models.tenant import Tenant
 from flask_migrate import Migrate
+from dotenv import load_dotenv
+load_dotenv()
+import os 
 
 app = Flask(__name__)
 
 # Configure the database URI
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URI')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.json.compact = False
 
 # Initialize the database
 db.init_app(app)
@@ -27,5 +31,3 @@ migrate = Migrate(app, db)
 if __name__ == "__main__":
     from routes import *
     app.run(debug=True)
-
-
