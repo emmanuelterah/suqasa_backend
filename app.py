@@ -92,13 +92,10 @@ def login():
 
     # Check if basic authentication credentials are provided
     if auth and auth.username and auth.password:
-        # Handle basic authentication
         username = auth.username
         password = auth.password
     else:
-        # Retrieve username and password from cookies
-        username = request.cookies.get('username')
-        password = request.cookies.get('password')
+        return jsonify({'message': 'Invalid credentials'}), 401
 
     # Check if username exists in the user database
     if username in users:
@@ -118,6 +115,7 @@ def login():
             return jsonify({'message': 'Invalid credentials'}), 401
     else:
         return jsonify({'message': 'Invalid username'}), 401
+
 
 # Protected route example for tenants
 @app.route('/protected/tenant', methods=['GET'])
