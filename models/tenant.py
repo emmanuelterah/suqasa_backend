@@ -1,6 +1,5 @@
-from flask_sqlalchemy import SQLAlchemy
+from .dbmodels import db
 from sqlalchemy_serializer import SerializerMixin
-from models.dbmodels import db
 
 class Tenant(db.Model, SerializerMixin):
     __tablename__ = 'tenants'

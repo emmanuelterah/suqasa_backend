@@ -1,44 +1,33 @@
-from flask import Flask, request, make_response, jsonify
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.exc import IntegrityError
-from flask_migrate import Migrate
 from models.dbmodels import db
-
-
 from models.property import Property
 from models.landlord import Landlord
-from models.tenant import Tenant
 from models.lease_agreement import LeaseAgreement
 from models.maintenance import MaintenanceRequest
 from models.payment import Payment
+from models.tenant import Tenant
+from flask_migrate import Migrate
 from dotenv import load_dotenv
 load_dotenv()
-import os
-
-# BASE_DIR = os.path.abspath(os.path.dirname(__file__))
-# DATABASE = os.environ.get(
-#     "DB_URI", f"sqlite:///{os.path.join(BASE_DIR, 'app.db')}")
+import os 
 
 app = Flask(__name__)
+
+# Configure the database URI
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URI')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-# app.json.compact = False
-app.config['JSONIFY_PRETTYPRINT_REGULAR'] = True 
+app.json.compact = False
 
-migrate = Migrate(app, db)
-
+# Initialize the database
 db.init_app(app)
 
-@app.route('/')
-def home():
-    return '<h1>Property management</h1>'
+# Initialize Flask-Migrate
+migrate = Migrate(app, db)
 
-@app.route('/properties', methods=['GET'])
-def get_properties():
-    properties = Property.query.all()
-    return jsonify([property.to_dict() for property in properties])
+# # # Create the database tables
+# with app.app_context():
+#     db.create_all()
 
-
-if __name__ == '__main__':
-    app.run(port=5555, debug=True)
+if __name__ == "__main__":
+    from routes import *
+    app.run(debug=True)
