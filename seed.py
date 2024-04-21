@@ -221,6 +221,6 @@ with app.app_context():
     # Add maintenance requests to the session
     db.session.add_all([request1, request2, request3, request4, request5, request6])
 
-# Commit changes and close session
-session.commit()
-session.close()
+    # Commit changes and close session
+    db.session.commit()
+    db.session.close()
