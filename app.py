@@ -92,40 +92,32 @@ def login():
 
     # Check if basic authentication credentials are provided
     if auth and auth.username and auth.password:
-        if auth.username in users and check_password_hash(users[auth.username]['password'], auth.password):
+        # Handle basic authentication
+        username = auth.username
+        password = auth.password
+    else:
+        # Retrieve username and password from cookies
+        username = request.cookies.get('username')
+        password = request.cookies.get('password')
+
+    # Check if username exists in the user database
+    if username in users:
+        # Check if the password matches the stored password for the user
+        if check_password_hash(users[username]['password'], password):
             # Generate JWT token
-            token = jwt.encode({'username': auth.username}, app.config['SECRET_KEY'], algorithm='HS256')
+            token = jwt.encode({'username': username}, app.config['SECRET_KEY'], algorithm='HS256')
             # Redirect to tenant dashboard if the user is a tenant
-            if users[auth.username]['type'] == 'tenant':
-                return jsonify({'token': token, 'redirect': '/tenant-dashboard'}), 200
-            # Add similar logic for other user types (e.g., landlord)
-            elif users[auth.username]['type'] == 'landlord':
-                return jsonify({'token': token, 'redirect': '/landlord-dashboard'}), 200
+            if users[username]['type'] == 'tenant':
+                return ('/tenant-dashboard')
+            # Redirect to landlord dashboard if the user is a landlord
+            elif users[username]['type'] == 'landlord':
+                return ('/landlord-dashboard')
             else:
                 return jsonify({'message': 'Invalid user type'}), 401
         else:
             return jsonify({'message': 'Invalid credentials'}), 401
-
-    # Retrieve username and password from cookies
-    username_cookie = request.cookies.get('username')
-    password_cookie = request.cookies.get('password')
-
-    # Check if username and password cookies are present
-    if username_cookie and password_cookie:
-        # Check if the provided username exists in your user database
-        if username_cookie in users:
-            # Check if the password matches the stored password for the user
-            if check_password_hash(users[username_cookie]['password'], password_cookie):
-                # Generate JWT token
-                token = jwt.encode({'username': username_cookie}, app.config['SECRET_KEY'], algorithm='HS256')
-                # Return token along with a message indicating successful login
-                response = jsonify({'token': token, 'message': 'Login successful'})
-                # Set token cookie in the response
-                response.set_cookie('token', token)
-                return response, 200
-
-    return jsonify({'message': 'Could not verify'}), 401
-
+    else:
+        return jsonify({'message': 'Invalid username'}), 401
 
 # Protected route example for tenants
 @app.route('/protected/tenant', methods=['GET'])
