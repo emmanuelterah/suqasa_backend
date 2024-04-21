@@ -91,23 +91,23 @@ def connect_db():
 ##lOGIN
 @app.route('/login', methods=['POST'])
 def login():
-    data = request.get_json()
-    username = data.get('username')
-    password = data.get('password')
+    auth = request.authorization
 
-    if not username or not password:
-        return jsonify({'message': 'Username and password are required'}), 400
+    if not auth or not auth.username or not auth.password:
+        return jsonify({'message': 'Could not verify'}), 401
 
-    conn = connect_db()
-    cursor = conn.cursor()
-    cursor.execute("SELECT username, password, type FROM users WHERE username=?", (username,))
-    user = cursor.fetchone()
+    if auth.username in users and check_password_hash(users[auth.username]['password'], auth.password):
+        token = jwt.encode({'username': auth.username}, app.config['SECRET_KEY'], algorithm='HS256')
+        # Redirect to tenant dashboard if the user is a tenant
+        if users[auth.username]['type'] == 'tenant':
+            return jsonify({'token': token, 'redirect': '/tenant-dashboard'}), 200
+        # Add similar logic for other user types (e.g., landlord)
+        elif users[auth.username]['type'] == 'landlord':
+            return jsonify({'token': token, 'redirect': '/landlord-dashboard'}), 200
+        else:
+            return jsonify({'message': 'Invalid user type'}), 401
 
-    if not user or not check_password_hash(user[1], password):
-        return jsonify({'message': 'Invalid credentials'}), 401
-
-    token = jwt.encode({'username': username}, app.config['SECRET_KEY'], algorithm='HS256')
-    return jsonify({'token': token.decode('utf-8'), 'type': user[2]}), 200
+    return jsonify({'message': 'Invalid credentials'}), 401
 
 # Protected route example for tenants
 @app.route('/protected/tenant', methods=['GET'])
