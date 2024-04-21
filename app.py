@@ -85,7 +85,7 @@ def token_required(user_type):
 
 # Connect to your database
 def connect_db():
-    conn = sqlite3.connect('your_database.db')
+    conn = sqlite3.connect('database.db')
     return conn
 
 ##lOGIN
