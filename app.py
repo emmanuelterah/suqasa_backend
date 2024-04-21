@@ -34,6 +34,7 @@ migrate = Migrate(app, db)
 # # # Create the database tables
 # with app.app_context():
 #     db.create_all()
+# Welcome route
 @app.route("/")
 def index():
     return "<h1>Welcome to the Property Management App!</h1>"
@@ -105,6 +106,7 @@ def update_landlord_by_id(id):
             return jsonify({"error": "Landlord not found"}), 404
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 @app.route("/properties", methods=['GET'])
 def get_properties():
     properties = Property.query.all()
@@ -113,7 +115,13 @@ def get_properties():
             "id": property.id,
             "name": property.name,
             "address": property.address,
-            # Add other fields as needed
+            "description": property.description,
+            "Bedrooms": property.Bedrooms,
+            "image": property.image,
+            "Size": property.Size,
+            "RentAmount": property.RentAmount,
+            "Status": property.Status,
+            "LandlordID": property.LandlordID,
         }
         for property in properties
     ]
@@ -128,11 +136,13 @@ def get_property_by_id(id):
         "address": property.address,
         "description": property.description,
         "Bedrooms": property.Bedrooms,
+        "image": property.image,  # Include image field
         "Size": property.Size,
         "RentAmount": property.RentAmount,
         "Status": property.Status,
         "LandlordID": property.LandlordID
     }), 200
+
 
 @app.route("/properties", methods=['POST'])
 def create_property():
@@ -575,7 +585,6 @@ def update_payment_by_id(id):
             return jsonify({"error": "Payment not found"}), 404
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
 
 
 
