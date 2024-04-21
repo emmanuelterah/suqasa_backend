@@ -14,3 +14,4 @@ class Tenant(db.Model, SerializerMixin):
 
     leases = db.relationship("LeaseAgreement", back_populates="tenant")
     payments = db.relationship("Payment", back_populates="tenant")
+

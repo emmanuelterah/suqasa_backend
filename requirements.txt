@@ -8,5 +8,5 @@ ipdb
 python-dotenv
 SQLAlchemy
 SQLAlchemy_serializer
-gunicorn
+gunicorn == 20.1.0
 psycopg2

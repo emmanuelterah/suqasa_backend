@@ -14,3 +14,4 @@ class MaintenanceRequest(db.Model, SerializerMixin):
     CompletionDate = db.Column(db.Date)
 
     property = db.relationship("Property", back_populates="maintenance_requests")
+
