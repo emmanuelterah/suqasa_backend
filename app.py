@@ -10,6 +10,7 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import IntegrityError
 from flask_migrate import Migrate
 from datetime import datetime
+from flask_cors import CORS
 from dotenv import load_dotenv
 load_dotenv()
 import os 
@@ -21,6 +22,7 @@ app = Flask(
     # static_folder='../client/build',
     # template_folder='../client/build'
 )
+CORS(app)
 
 # Configure the database URI
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URI')
