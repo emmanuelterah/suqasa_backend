@@ -13,8 +13,13 @@ from datetime import datetime
 from flask_cors import CORS
 from dotenv import load_dotenv
 load_dotenv()
-import os 
 
+
+import os 
+import jwt
+from werkzeug.security import generate_password_hash, check_password_hash
+from functools import wraps
+import sqlite3
 
 app = Flask(
     __name__,
@@ -38,6 +43,95 @@ migrate = Migrate(app, db)
 # # # Create the database tables
 # with app.app_context():
 #     db.create_all()
+
+
+# <-----------AUTHENTICATION----------->
+
+# Authentication decorator
+
+users = {
+    "tenant1": {
+        "password": generate_password_hash("password1"),
+        "type": "tenant"
+    },
+    "landlord1": {
+        "password": generate_password_hash("password2"),
+        "type": "landlord"
+    }
+}
+
+
+def token_required(user_type):
+    def decorator(f):
+        @wraps(f)
+        def decorated(*args, **kwargs):
+            token = request.headers.get('Authorization')
+
+            if not token:
+                return jsonify({'message': 'Token is missing'}), 401
+
+            try:
+                data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
+                current_user = data['username']
+                if users[current_user]['type'] != user_type:
+                    raise Exception("Unauthorized access")
+            except Exception as e:
+                return jsonify({'message': str(e)}), 401
+
+            return f(current_user, *args, **kwargs)
+
+        return decorated
+    return decorator
+
+# Connect to your database
+def connect_db():
+    conn = sqlite3.connect('your_database.db')
+    return conn
+
+##lOGIN
+@app.route('/login', methods=['POST'])
+def login():
+    data = request.get_json()
+    username = data.get('username')
+    password = data.get('password')
+
+    if not username or not password:
+        return jsonify({'message': 'Username and password are required'}), 400
+
+    conn = connect_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT username, password, type FROM users WHERE username=?", (username,))
+    user = cursor.fetchone()
+
+    if not user or not check_password_hash(user[1], password):
+        return jsonify({'message': 'Invalid credentials'}), 401
+
+    token = jwt.encode({'username': username}, app.config['SECRET_KEY'], algorithm='HS256')
+    return jsonify({'token': token.decode('utf-8'), 'type': user[2]}), 200
+
+# Protected route example for tenants
+@app.route('/protected/tenant', methods=['GET'])
+@token_required('tenant')
+def protected_tenant(current_user):
+    return jsonify({'message': 'Hello, {}! This is a protected tenant route.'.format(current_user)}), 200
+
+# Protected route example for landlords
+@app.route('/protected/landlord', methods=['GET'])
+@token_required('landlord')
+def protected_landlord(current_user):
+    return jsonify({'message': 'Hello, {}! This is a protected landlord route.'.format(current_user)}), 200
+
+
+
+
+
+
+
+
+
+
+
+
 # Welcome route
 @app.route("/")
 def index():
@@ -195,7 +289,7 @@ def update_property(property_id):
     if 'description' in data:
         property.description = data['description']
     if 'Bedrooms' in data:
-        property.Bedrooms = data['Bedrooms']
+        property.Bedrooms = data['Bedrooms'] 
     if 'image' in data:
         property.image = data['image']
     if 'Size' in data:
