@@ -1,8 +1,8 @@
-"""database changes
+"""DELETE PASSWORD RESET TOKEN
 
-Revision ID: 8e5f65c008fa
+Revision ID: 597a80a7032a
 Revises: 
-Create Date: 2024-04-22 13:42:20.852860
+Create Date: 2024-04-22 17:23:32.860372
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '8e5f65c008fa'
+revision = '597a80a7032a'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -46,14 +46,6 @@ def upgrade():
     sa.UniqueConstraint('email'),
     sa.UniqueConstraint('id'),
     sa.UniqueConstraint('username')
-    )
-    op.create_table('password_reset_token',
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('user_id', sa.Integer(), nullable=False),
-    sa.Column('token', sa.String(length=100), nullable=False),
-    sa.Column('expiration', sa.DateTime(), nullable=False),
-    sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
-    sa.PrimaryKeyConstraint('id')
     )
     op.create_table('properties',
     sa.Column('id', sa.Integer(), nullable=False),
@@ -115,7 +107,6 @@ def downgrade():
     op.drop_table('maintenance_requests')
     op.drop_table('lease_agreements')
     op.drop_table('properties')
-    op.drop_table('password_reset_token')
     op.drop_table('users')
     op.drop_table('tenants')
     op.drop_table('landlords')
