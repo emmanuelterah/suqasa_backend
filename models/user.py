@@ -3,13 +3,13 @@ from uuid import uuid4
 from werkzeug.security import generate_password_hash, check_password_hash
 from .dbmodels import db
 
-# def get_uuid():
-#     return uuid4().hex
+def get_uuid():
+    return uuid4().hex
 
 class User(db.Model):
     __tablename__ = 'users'
 
-    id = db.Column(db.Integer, primary_key=True, unique=True, nullable=False)
+    id = db.Column(db.VARCHAR, primary_key=True, unique=True, default=get_uuid)
     username = db.Column(db.String(100), unique=True, nullable=False)
     email = db.Column(db.String(150), unique=True)
     user_type = db.Column(db.String(50))
