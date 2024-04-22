@@ -9,11 +9,7 @@ from .dbmodels import db
 class User(db.Model):
     __tablename__ = 'users'
 
-<<<<<<< HEAD
-    id = db.Column(db.Integer, primary_key=True, unique=True)
-=======
     id = db.Column(db.Integer, primary_key=True, unique=True, nullable=False)
->>>>>>> origin/Derrick
     username = db.Column(db.String(100), unique=True, nullable=False)
     email = db.Column(db.String(150), unique=True)
     user_type = db.Column(db.String(50))
