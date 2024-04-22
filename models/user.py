@@ -9,7 +9,7 @@ def get_uuid():
 class User(db.Model):
     __tablename__ = 'users'
 
-    id = db.Column(db.String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    id = db.Column(db.String, primary_key=True, default=get_uuid)
     username = db.Column(db.String(100), unique=True, nullable=False)
     email = db.Column(db.String(150), unique=True)
     user_type = db.Column(db.String(50))
