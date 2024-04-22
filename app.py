@@ -1,5 +1,7 @@
-from flask import Flask, request, Response, jsonify, redirect,flash, url_for
-from flask_sqlalchemy import SQLAlchemy
+from flask import Flask, request, Response, jsonify
+from werkzeug.security import check_password_hash
+from datetime import datetime, timedelta
+from models.passwordresettoken import PasswordResetToken
 from models.dbmodels import db
 from models.property import Property
 from models.landlord import Landlord
@@ -10,7 +12,11 @@ from models.tenant import Tenant
 from models.user import User
 from flask_migrate import Migrate
 from datetime import datetime
-from werkzeug.security import check_password_hash
+from models.user import User
+import base64
+import random
+import string
+# from flasgger import Swagger
 from flask_cors import CORS
 from datetime import datetime, timedelta
 import base64
@@ -23,6 +29,7 @@ import jwt
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
 import sqlite3
+import psycopg2
 
 app = Flask(
     __name__,
@@ -32,12 +39,17 @@ app = Flask(
 )
 CORS(app)
 
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+DATABASE = os.environ.get(
+    "DB_URI", f"sqlite:///{os.path.join(BASE_DIR, 'app.db')}")
+
 # Configure the database URI
-# app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URI')
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.json.compact = False
 
+secret_key = base64.b64encode(os.urandom(24)).decode('utf-8')
+print(secret_key)
 # Initialize the database
 db.init_app(app)
 	
@@ -56,6 +68,41 @@ with app.app_context():
 
 # Authentication decorator
 
+# @app.route('/register', methods=['POST'])
+# def register():
+#     # Parse incoming JSON data
+#     data = request.get_json()
+
+#     # Check if required fields are present
+#     if not all(key in data for key in ('username', 'password', 'email', 'type')):
+#         return jsonify({'message': 'Missing required fields'}), 400
+
+#     # Extract data from JSON
+#     username = data['username']
+#     password = data['password']
+#     email = data['email']
+#     user_type = data['type']
+
+#     # Check if username or email already exists
+#     if username in users or any(user['email'] == email for user in users.values()):
+#         return jsonify({'message': 'Username or email already exists'}), 409
+
+#     # Hash the password
+#     hashed_password = generate_password_hash(password)
+
+#     # Store user data in the database
+#     try:
+#         conn = connect_db()
+#         cursor = conn.cursor()
+#         cursor.execute("INSERT INTO users (username, password, email, type) VALUES (%s, %s, %s, %s)",
+#                        (username, hashed_password, email, user_type))
+#         conn.commit()
+#         cursor.close()
+#         conn.close()
+#     except Exception as e:
+#         return jsonify({'message': 'Error registering user: {}'.format(str(e))}), 500
+
+#     return jsonify({'message': 'User registered successfully'}), 201
 users = {
     "tenant1": {
         "password": generate_password_hash("password1"),
@@ -92,180 +139,160 @@ def token_required(user_type):
 
 # Connect to your database
 def connect_db():
-    conn = sqlite3.connect('database.db')
+    conn = sqlite3.connect('app.db')
     return conn
+
+# def connect_db():
+#     conn = psycopg2.connect(
+#         dbname='property_management_285e',
+#         user='property_management_285e_user',
+#         password='236h6am7uok3sE85JlzrPBH6OLQL9KYO',
+#         host='localhost',
+#         port='5432'
+#     )
+#     return conn
 
 @app.route('/register', methods=['POST'])
 def register():
-    # Parse incoming JSON data
-    data = request.get_json()
 
-    # Check if required fields are present
-    if not all(key in data for key in ('username', 'email', 'password', 'type')):
-        return jsonify({'message': 'Missing required fields'}), 400
+# Parse incoming JSON data
+        data = request.get_json()
 
-    # Extract data from JSON
-    username = data['username']
-    email = data['email']
-    password = data['password']
-    type = data['type']
+        # Check if required fields are present
+        if not all(key in data for key in ('username', 'email', 'password', 'user_type')):
+            return jsonify({'message': 'Missing required fields'}), 400
 
-    # Check if username already exists
-    existing_user = User.query.filter_by(username=username).first()
-    if existing_user:
-        return jsonify({'message': 'Username already exists'}), 409
+        # Extract data from JSON
+        username = data['username']
+        email = data['email']
+        password = data['password']
+        user_type = data['user_type']
 
-    # Hash the password
-    hashed_password = generate_password_hash(password)
+        # Check if username already exists
+        existing_user = User.query.filter_by(username=username).first()
+        if existing_user:
+            return jsonify({'message': 'Username already exists'}), 409
 
-    # Create a new user instance
-    new_user = User(username=username, email=email, password=hashed_password, type=type)
+        # Hash the password
+        hashed_password = generate_password_hash(password)
 
-    # Add user to the database
-    try:
-        db.session.add(new_user)
-        db.session.commit()
-        return jsonify({'message': 'User registered successfully'}), 201
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({'message': 'Error registering user: {}'.format(str(e))}), 500
-    finally:
-        db.session.close()
+        # Create a new user instance
+        new_user = User(username=username, email=email, password=hashed_password, user_type=user_type)
 
-# @app.route('/register', methods=['POST'])
-# def register():
+        # Add user to the database
+        try:
+            db.session.add(new_user)
+            db.session.commit()
+            return jsonify({'message': 'User registered successfully'}), 201
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({'message': 'Error registering user: {}'.format(str(e))}), 500
+        finally:
+            db.session.close()
 
-#     # Parse incoming JSON data
-#     data = request.get_json()
 
-#     # Check if required fields are present
-#     if not all(key in data for key in ('username', 'email','password', 'type')):
-#         return jsonify({'message': 'Missing required fields'}), 400
-
-#     # Extract data from JSON
-#     username = data['username']
-#     email=data['email']
-#     password = data['password']
-#     type = data['type']
-
-#     # Check if username already exists
-#     if username in users:
-#         return jsonify({'message': 'Username already exists'}), 409
-
-#     # Hash the password
-#     hashed_password = generate_password_hash(password)
-
-#     # Store user data in the database
-#     try:
-#         conn = connect_db()
-#         cursor = conn.cursor()
-#         # cursor.execute("INSERT INTO users (username, email, password, type) VALUES (%s, %s, %s, %s)", (username, email, hashed_password, type))
-#         cursor.execute("INSERT INTO users (username, email, password, type) VALUES (?, ?, ?, ?)", (username, email, hashed_password, type))
-
-#         conn.commit()
-#         cursor.close()
-#         conn.close()
-#     except Exception as e:
-#         return jsonify({'message': 'Error registering user: {}'.format(str(e))}), 500
-
-#     return jsonify({'message': 'User registered successfully'}), 201
 
 @app.route('/login', methods=['POST'])
 def login():
-    auth = request.authorization
+    data = request.get_json()
+    username = data.get('username')
+    password = data.get('password')
 
-    # Check if basic authentication credentials are provided
-    if auth and auth.username and auth.password:
-        username = auth.username
-        password = auth.password
+    user = User.query.filter_by(username=username).first()
+
+    if user and check_password_hash(user.password, password):
+        # generate token with no expiry 
+        # token = jwt.encode({'user_id': user.id}, secret_key, algorithm='HS256')
+
+        # to generate a token with an expiration period 
+        # Set the expiration time to 1 hour from now // to set as minutes , use minutes , to set as seconds add as seconds.
+        expiration_time = datetime.utcnow() + timedelta(hours=1)
+        # Generate the JWT token with the 'exp' claim
+        token = jwt.encode({'user_id': user.id, 'exp': expiration_time}, secret_key, algorithm='HS256')
+        print(token)
+        return jsonify({'message': 'Login successful', 'token': token})
     else:
-        return jsonify({'message': 'Invalid credentials'}), 401
+        return jsonify({'message': 'Invalid username or password'}), 401
+    
+# Helper function to decode the token
+def decode_token(token):
+    try:
+        payload = jwt.decode(token, secret_key, algorithms=['HS256'])
+        return payload
+    except jwt.ExpiredSignatureError:
+        return 'Token has expired. Please log in again.'
+    except jwt.InvalidTokenError:
+        return 'Invalid token. Please log in again.'
+    
+@app.route('/protected', methods=['GET'])
+def protected_route():
+    token = request.headers.get('Authorization')
 
-    # Check if username exists in the user database
-    if username in users:
-        # Check if the password matches the stored password for the user
-        if check_password_hash(users[username]['password'], password):
-            # Generate JWT token
-            token = jwt.encode({'username': username}, app.config['SECRET_KEY'], algorithm='HS256')
-            # Redirect to tenant dashboard if the user is a tenant
-            if users[username]['type'] == 'tenant':
-                return ('/tenant-dashboard')
-            # Redirect to landlord dashboard if the user is a landlord
-            elif users[username]['type'] == 'landlord':
-                return ('/landlord-dashboard')
-            else:
-                return jsonify({'message': 'Invalid user type'}), 401
-        else:
-            return jsonify({'message': 'Invalid credentials'}), 401
-    else:
-        return jsonify({'message': 'Invalid username'}), 401
-# @app.route('/login', methods=['POST'])
-# def login():
-#     """Handles login logic, retrieves credentials, verifies user, and generates JWT token."""
-#     data = request.get_json()
+    if not token:
+        return jsonify({'message': 'Token is missing'}), 401
 
-#     if not data or not data.get('username') or not data.get('password'):
-#         return jsonify({'message': 'Missing credentials'}), 401
+    token = token.split(' ')[1]  # Extract the token from the 'Authorization' header
 
-#     username = data.get('username')
-#     password = data.get('password')
+    # Decode the token
+    payload = decode_token(token)
 
-#     user = User.query.filter_by(username=username).first()
+    if isinstance(payload, str):
+        return jsonify({'message': payload}), 401
 
-#     if not user or not user.check_password(password):
-#         return jsonify({'message': 'Invalid username or password'}), 401
+    user_id = payload.get('user_id')
+    
+    # Now you have the user ID, and you can perform further authorization logic
+    # Check if the user has the necessary permissions, etc.
+    # the process 
+    return jsonify({'message': 'Access granted'}), 200
 
-#     # Set expiration time to 15 minutes
-#     expiration_time = datetime.utcnow() + timedelta(minutes=15)
 
-#     # Generate JWT token with user ID and expiration claim
-#     token = jwt.encode({'user_id': user.id, 'exp': expiration_time}, app.config['SECRET_KEY'], algorithm='HS256')
 
-#     return jsonify({'message': 'Login successful', 'token': token})
-#     @app.route('/login', methods=['POST'])
-#     def login_route():
-#         """Binds the login function to the /login POST route."""
-#         return login()
+@app.route('/forgot-password', methods=['POST'])
+def forgot_password():
+    data = request.get_json()
+    username = data.get('username')
 
-# @app.route('/login', methods=['POST'])
-# def login():
-#     auth = request.authorization
+    user = User.query.filter_by(username=username).first()
 
-#     # Check if basic authentication credentials are provided
-#     if not auth or not auth.username or not auth.password:
-#         return jsonify({'message': 'Invalid credentials'}), 401
+    if user:
+        # Generate a random token
+        token = ''.join(random.choices(string.ascii_letters + string.digits, k=20))
 
-#     # Extract username and password from authentication
-#     username = auth.username
-#     password = auth.password
+        # Set token expiration time (e.g., 1 hour)
+        expiration = datetime.now() + timedelta(hours=1)
+        print(token)
+        print(expiration)
+        # Create a new reset token
+        reset_token = PasswordResetToken(user_id=user.id, token=token, expiration=expiration)
+        db.session.add(reset_token)
+        db.session.commit()
 
-#     # Find the user by username in the database
-#     user = User.query.filter_by(username=username).first()
+        # In a real application, you would send an email with the reset link containing the token
 
-#     if not user:
-#         return jsonify({'message': 'Invalid username'}), 401
+        return jsonify({'message': 'Password reset token generated successfully'})
 
-#     # Check if the password is hashed
-#     if not user.password.startswith('$'):
-#         # If not hashed, hash the password before comparison
-#         if not check_password_hash(user.password, password):
-#             return jsonify({'message': 'Invalid credentials'}), 401
-#     else:
-#         # If already hashed, directly compare the passwords
-#         if not user.check_password(password):
-#             return jsonify({'message': 'Invalid credentials'}), 401
+    return jsonify({'message': 'User not found'}), 404
 
-#     # Generate JWT token
-#     token = jwt.encode({'username': username}, app.config['SECRET_KEY'], algorithm='HS256')
+@app.route('/reset-password/<token>', methods=['POST'])
+def reset_password(token):
+    data = request.get_json()
+    new_password = data.get('new_password')
 
-#     # Redirect to tenant dashboard if the user is a tenant
-#     if user.type == 'tenant':
-#         return jsonify({'token': token, 'redirect': '/tenant-dashboard'}), 200
-#     # Redirect to landlord dashboard if the user is a landlord
-#     elif user.type == 'landlord':
-#         return jsonify({'token': token, 'redirect': '/landlord-dashboard'}), 200
-#     else:
-#         return jsonify({'message': 'Invalid user type'}), 401
+    reset_token = PasswordResetToken.query.filter_by(token=token).first()
+
+    if reset_token and reset_token.expiration > datetime.now():
+        user = User.query.filter_by(id=reset_token.user_id).first()
+        hashed_password = generate_password_hash(new_password, method='sha256')
+        user.password = hashed_password
+
+        db.session.delete(reset_token)
+        db.session.commit()
+
+        return jsonify({'message': 'Password reset successful'})
+
+    return jsonify({'message': 'Invalid or expired reset token'}), 400
+
 
 # Protected route example for tenants
 @app.route('/protected/tenant', methods=['GET'])
