@@ -8,4 +8,4 @@ class PasswordResetToken(db.Model):
     token = db.Column(db.String(100), nullable=False)
     expiration = db.Column(db.DateTime, nullable=False)
 
-    user = db.relationship('User', backref='reset_tokens')
+    user = db.relationship('User', backref='reset_tokens', primaryjoin="User.id == foreign(PasswordResetToken.user_id)")
