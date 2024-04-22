@@ -7,7 +7,7 @@ from .dbmodels import db
 #     return uuid4().hex
 
 class User(db.Model):
-    tablename = 'users'
+    tablename = 'user'
 
     id = db.Column(db.Integer, primary_key=True, unique=True, nullable =False)
     username = db.Column(db.String(100), unique=True, nullable=False)

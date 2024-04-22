@@ -22,11 +22,12 @@ load_dotenv()
 
 
 import os 
-import jwt
+# import jwt
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
 import sqlite3
 import psycopg2
+import jwt
 
 app = Flask(
     __name__,
@@ -194,24 +195,57 @@ def register():
 #     return jsonify({'message': 'Access granted'}), 200
 
 
+# @app.route('/login', methods=['POST'])
+# def login():
+#     data = request.get_json()
+#     username = data.get('username')
+#     password = data.get('password')
+
+#     user = User.query.filter_by(username=username).first()
+
+#     if user and check_password_hash(user.password, password):
+
+#         expiration_time = datetime.utcnow() + timedelta(hours=1)
+#         # Generate the JWT token with the 'exp' claim
+#         token = jwt.encode({'user_id': user.id, 'exp': expiration_time}, secret_key, algorithm='HS256')
+#         print(token)
+#         return jsonify({'message': 'Login successful', 'token': token})
+#     else:
+#         return jsonify({'message': 'Invalid username or password'}), 401
+
+
+# def decode_token(token):
+#     try:
+#         payload = jwt.decode(token, secret_key, algorithms=['HS256'])
+#         return payload
+#     except jwt.ExpiredSignatureError:
+#         return 'Token has expired. Please log in again.'
+#     except jwt.InvalidTokenError:
+#         return 'Invalid token. Please log in again.'
+
+
 @app.route('/login', methods=['POST'])
 def login():
-    data = request.get_json()
-    username = data.get('username')
-    password = data.get('password')
+    try:
+        data = request.get_json()
+        username = data.get('username')
+        password = data.get('password')
 
-    user = User.query.filter_by(username=username).first()
+        if not username or not password:
+            return jsonify({'message': 'Missing username or password'}), 400
 
-    if user and check_password_hash(user.password, password):
+        user = User.query.filter_by(username=username).first()
+
+        if not user or not check_password_hash(user.password, password):
+            return jsonify({'message': 'Invalid username or password'}), 401
 
         expiration_time = datetime.utcnow() + timedelta(hours=1)
-        # Generate the JWT token with the 'exp' claim
         token = jwt.encode({'user_id': user.id, 'exp': expiration_time}, secret_key, algorithm='HS256')
-        print(token)
-        return jsonify({'message': 'Login successful', 'token': token})
-    else:
-        return jsonify({'message': 'Invalid username or password'}), 401
 
+        return jsonify({'message': 'Login successful', 'token': token})
+    except Exception as e:
+        print(f"Login error: {e}")
+        return jsonify({'message': 'Internal server error'}), 500
 
 def decode_token(token):
     try:
@@ -221,6 +255,11 @@ def decode_token(token):
         return 'Token has expired. Please log in again.'
     except jwt.InvalidTokenError:
         return 'Invalid token. Please log in again.'
+    except jwt.JWTException as e:
+        print(f"Token decoding error: {e}")
+        return 'Invalid token.'
+
+
 
 @app.route('/protected', methods=['GET'])
 def protected_route():
