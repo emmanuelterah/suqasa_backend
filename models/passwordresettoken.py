@@ -1,7 +1,7 @@
 from .dbmodels import db
 
 class PasswordResetToken(db.Model):
-    __tablename__ ='password_rest_token'
+    __tablename__ ='password_reset_token'
     
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)

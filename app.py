@@ -41,7 +41,7 @@ CORS(app)
 #     "DB_URI", f"sqlite:///{os.path.join(BASE_DIR, 'app.db')}")
 
 # Configure the database URI
-app.config['SQLALCHEMY_DATABASE_URI'] ="postgresql://admin:TZdxvOhk8FBSF3YdU9cmpmDV06OMVAZs@dpg-coj0ohljm4es73a04ip0-a.oregon-postgres.render.com/property_0lmq"
+app.config['SQLALCHEMY_DATABASE_URI'] ="postgresql://admin:x3XljGxcsxwDN4tJxWzgyXNR8zJelWaW@dpg-coj3scdjm4es73a2610g-a.oregon-postgres.render.com/property_h0nh"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.json.compact = False
 
