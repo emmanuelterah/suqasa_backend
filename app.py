@@ -103,56 +103,13 @@ def token_required(user_type):
 #     )
 #     return conn
 
-# @app.route('/register', methods=['POST'])
-# def register():
-
-# # Parse incoming JSON data
-#         data = request.get_json()
-
-#         # Check if required fields are present
-#         if not all(key in data for key in ('username', 'email', 'password', 'user_type')):
-#             return jsonify({'message': 'Missing required fields'}), 400
-
-#         # Extract data from JSON
-#         username = data['username']
-#         email = data['email']
-#         password = data['password']
-#         user_type = data['user_type']
-
-#         # Check if username already exists
-#         existing_user = User.query.filter_by(username=username).first()
-#         if existing_user:
-#             return jsonify({'message': 'Username already exists'}), 409
-
-#         # Hash the password
-#         hashed_password = generate_password_hash(password)
-
-#         # Create a new user instance
-#         new_user = User(username=username, email=email, password=hashed_password, user_type=user_type)
-
-#         # Add user to the database
-#         try:
-#             db.session.add(new_user)
-#             db.session.commit()
-#             return jsonify({'message': 'User registered successfully'}), 201
-#         except Exception as e:
-#             db.session.rollback()
-#             return jsonify({'message': 'Error registering user: {}'.format(str(e))}), 500
-#         finally:
-#             db.session.close()
-
-# from flask import request, jsonify
-# from werkzeug.security import generate_password_hash
-# from .models import db, User  # Assuming your SQLAlchemy model is defined in `models.py`
-
 @app.route('/register', methods=['POST'])
 def register():
-    # Parse incoming JSON data
+    
     data = request.get_json()
 
     # Check if required fields are present
-    required_fields = ['username', 'email', 'password', 'user_type']
-    if not all(key in data for key in required_fields):
+    if not all(key in data for key in ('username', 'email', 'password', 'user_type')):
         return jsonify({'message': 'Missing required fields'}), 400
 
     # Extract data from JSON
@@ -170,16 +127,18 @@ def register():
     hashed_password = generate_password_hash(password)
 
     # Create a new user instance
-    new_user = User(username=username, email=email, password_hash=hashed_password, user_type=user_type)
+    new_user = User(username=username, email=email, password=hashed_password, user_type=user_type)
 
     # Add user to the database
     try:
-        with db.session.begin_nested():  # Using a nested transaction
-            db.session.add(new_user)
+        db.session.add(new_user)
+        db.session.commit()
         return jsonify({'message': 'User registered successfully'}), 201
     except Exception as e:
         db.session.rollback()
         return jsonify({'message': 'Error registering user: {}'.format(str(e))}), 500
+    finally:
+        db.session.close()
 
 
 @app.route('/login', methods=['POST'])
