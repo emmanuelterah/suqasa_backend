@@ -36,12 +36,12 @@ app = Flask(
 )
 CORS(app)
 
-BASE_DIR = os.path.abspath(os.path.dirname(__file__))
-DATABASE = os.environ.get(
-    "DB_URI", f"sqlite:///{os.path.join(BASE_DIR, 'app.db')}")
+# BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+# DATABASE = os.environ.get(
+#     "DB_URI", f"sqlite:///{os.path.join(BASE_DIR, 'app.db')}")
 
 # Configure the database URI
-app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE
+app.config['SQLALCHEMY_DATABASE_URI'] ="postgresql://admin:TZdxvOhk8FBSF3YdU9cmpmDV06OMVAZs@dpg-coj0ohljm4es73a04ip0-a.oregon-postgres.render.com/property_0lmq"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.json.compact = False
 
@@ -53,50 +53,7 @@ db.init_app(app)
 # Initialize Flask-Migrate
 migrate = Migrate(app, db)
 
-# # # Create the database tables
-# with app.app_context():
-#     db.create_all()
 
-
-# <-----------AUTHENTICATION----------->
-
-# Authentication decorator
-
-# @app.route('/register', methods=['POST'])
-# def register():
-#     # Parse incoming JSON data
-#     data = request.get_json()
-
-#     # Check if required fields are present
-#     if not all(key in data for key in ('username', 'password', 'email', 'type')):
-#         return jsonify({'message': 'Missing required fields'}), 400
-
-#     # Extract data from JSON
-#     username = data['username']
-#     password = data['password']
-#     email = data['email']
-#     user_type = data['type']
-
-#     # Check if username or email already exists
-#     if username in users or any(user['email'] == email for user in users.values()):
-#         return jsonify({'message': 'Username or email already exists'}), 409
-
-#     # Hash the password
-#     hashed_password = generate_password_hash(password)
-
-#     # Store user data in the database
-#     try:
-#         conn = connect_db()
-#         cursor = conn.cursor()
-#         cursor.execute("INSERT INTO users (username, password, email, type) VALUES (%s, %s, %s, %s)",
-#                        (username, hashed_password, email, user_type))
-#         conn.commit()
-#         cursor.close()
-#         conn.close()
-#     except Exception as e:
-#         return jsonify({'message': 'Error registering user: {}'.format(str(e))}), 500
-
-#     return jsonify({'message': 'User registered successfully'}), 201
 users = {
     "tenant1": {
         "password": generate_password_hash("password1"),
@@ -131,10 +88,10 @@ def token_required(user_type):
         return decorated
     return decorator
 
-# Connect to your database
-def connect_db():
-    conn = sqlite3.connect('app.db')
-    return conn
+# # Connect to your database
+# def connect_db():
+#     conn = sqlite3.connect('app.db')
+#     return conn
 
 # def connect_db():
 #     conn = psycopg2.connect(
@@ -195,11 +152,7 @@ def login():
     user = User.query.filter_by(username=username).first()
 
     if user and check_password_hash(user.password, password):
-        # generate token with no expiry 
-        # token = jwt.encode({'user_id': user.id}, secret_key, algorithm='HS256')
 
-        # to generate a token with an expiration period 
-        # Set the expiration time to 1 hour from now // to set as minutes , use minutes , to set as seconds add as seconds.
         expiration_time = datetime.utcnow() + timedelta(hours=1)
         # Generate the JWT token with the 'exp' claim
         token = jwt.encode({'user_id': user.id, 'exp': expiration_time}, secret_key, algorithm='HS256')
@@ -262,7 +215,7 @@ def forgot_password():
         db.session.add(reset_token)
         db.session.commit()
 
-        # In a real application, you would send an email with the reset link containing the token
+       
 
         return jsonify({'message': 'Password reset token generated successfully'})
 

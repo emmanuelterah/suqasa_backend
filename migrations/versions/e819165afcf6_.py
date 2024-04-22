@@ -1,8 +1,8 @@
-"""Authorization
+"""empty message
 
-Revision ID: 053dc0316794
+Revision ID: e819165afcf6
 Revises: 
-Create Date: 2024-04-22 03:42:26.269118
+Create Date: 2024-04-22 13:20:11.947208
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '053dc0316794'
+revision = 'e819165afcf6'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -37,14 +37,23 @@ def upgrade():
     sa.PrimaryKeyConstraint('TenantID')
     )
     op.create_table('users',
-    sa.Column('id', sa.String(length=11), nullable=False),
+    sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('username', sa.String(length=100), nullable=False),
     sa.Column('email', sa.String(length=150), nullable=True),
+    sa.Column('user_type', sa.String(length=50), nullable=True),
     sa.Column('password', sa.Text(), nullable=False),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('email'),
     sa.UniqueConstraint('id'),
     sa.UniqueConstraint('username')
+    )
+    op.create_table('password_rest_token',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('user_id', sa.Integer(), nullable=False),
+    sa.Column('token', sa.String(length=100), nullable=False),
+    sa.Column('expiration', sa.DateTime(), nullable=False),
+    sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
+    sa.PrimaryKeyConstraint('id')
     )
     op.create_table('properties',
     sa.Column('id', sa.Integer(), nullable=False),
@@ -106,6 +115,7 @@ def downgrade():
     op.drop_table('maintenance_requests')
     op.drop_table('lease_agreements')
     op.drop_table('properties')
+    op.drop_table('password_rest_token')
     op.drop_table('users')
     op.drop_table('tenants')
     op.drop_table('landlords')
