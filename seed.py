@@ -1,7 +1,3 @@
-
-
-
-
 from flask import Flask
 from models.dbmodels import db
 from models.landlord import Landlord
