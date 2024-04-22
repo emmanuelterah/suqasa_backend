@@ -1,4 +1,5 @@
-from flask import Flask, request, Response, jsonify
+from flask import Flask, request, Response, jsonify, redirect,flash, url_for
+from flask_sqlalchemy import SQLAlchemy
 from models.dbmodels import db
 from models.property import Property
 from models.landlord import Landlord
@@ -6,9 +7,13 @@ from models.lease_agreement import LeaseAgreement
 from models.maintenance import MaintenanceRequest
 from models.payment import Payment
 from models.tenant import Tenant
+from models.user import User
 from flask_migrate import Migrate
 from datetime import datetime
+from werkzeug.security import check_password_hash
 from flask_cors import CORS
+from datetime import datetime, timedelta
+import base64
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -28,19 +33,23 @@ app = Flask(
 CORS(app)
 
 # Configure the database URI
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URI')
+# app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URI')
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.json.compact = False
 
 # Initialize the database
 db.init_app(app)
+	
+secret_key = base64.b64encode(os.urandom(24)).decode('utf-8')
+print(secret_key)
 
 # Initialize Flask-Migrate
 migrate = Migrate(app, db)
 
-# # # Create the database tables
-# with app.app_context():
-#     db.create_all()
+# # Create the database tables
+with app.app_context():
+    db.create_all()
 
 
 # <-----------AUTHENTICATION----------->
@@ -86,6 +95,81 @@ def connect_db():
     conn = sqlite3.connect('database.db')
     return conn
 
+@app.route('/register', methods=['POST'])
+def register():
+    # Parse incoming JSON data
+    data = request.get_json()
+
+    # Check if required fields are present
+    if not all(key in data for key in ('username', 'email', 'password', 'type')):
+        return jsonify({'message': 'Missing required fields'}), 400
+
+    # Extract data from JSON
+    username = data['username']
+    email = data['email']
+    password = data['password']
+    type = data['type']
+
+    # Check if username already exists
+    existing_user = User.query.filter_by(username=username).first()
+    if existing_user:
+        return jsonify({'message': 'Username already exists'}), 409
+
+    # Hash the password
+    hashed_password = generate_password_hash(password)
+
+    # Create a new user instance
+    new_user = User(username=username, email=email, password=hashed_password, type=type)
+
+    # Add user to the database
+    try:
+        db.session.add(new_user)
+        db.session.commit()
+        return jsonify({'message': 'User registered successfully'}), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'message': 'Error registering user: {}'.format(str(e))}), 500
+    finally:
+        db.session.close()
+
+# @app.route('/register', methods=['POST'])
+# def register():
+
+#     # Parse incoming JSON data
+#     data = request.get_json()
+
+#     # Check if required fields are present
+#     if not all(key in data for key in ('username', 'email','password', 'type')):
+#         return jsonify({'message': 'Missing required fields'}), 400
+
+#     # Extract data from JSON
+#     username = data['username']
+#     email=data['email']
+#     password = data['password']
+#     type = data['type']
+
+#     # Check if username already exists
+#     if username in users:
+#         return jsonify({'message': 'Username already exists'}), 409
+
+#     # Hash the password
+#     hashed_password = generate_password_hash(password)
+
+#     # Store user data in the database
+#     try:
+#         conn = connect_db()
+#         cursor = conn.cursor()
+#         # cursor.execute("INSERT INTO users (username, email, password, type) VALUES (%s, %s, %s, %s)", (username, email, hashed_password, type))
+#         cursor.execute("INSERT INTO users (username, email, password, type) VALUES (?, ?, ?, ?)", (username, email, hashed_password, type))
+
+#         conn.commit()
+#         cursor.close()
+#         conn.close()
+#     except Exception as e:
+#         return jsonify({'message': 'Error registering user: {}'.format(str(e))}), 500
+
+#     return jsonify({'message': 'User registered successfully'}), 201
+
 @app.route('/login', methods=['POST'])
 def login():
     auth = request.authorization
@@ -115,7 +199,73 @@ def login():
             return jsonify({'message': 'Invalid credentials'}), 401
     else:
         return jsonify({'message': 'Invalid username'}), 401
+# @app.route('/login', methods=['POST'])
+# def login():
+#     """Handles login logic, retrieves credentials, verifies user, and generates JWT token."""
+#     data = request.get_json()
 
+#     if not data or not data.get('username') or not data.get('password'):
+#         return jsonify({'message': 'Missing credentials'}), 401
+
+#     username = data.get('username')
+#     password = data.get('password')
+
+#     user = User.query.filter_by(username=username).first()
+
+#     if not user or not user.check_password(password):
+#         return jsonify({'message': 'Invalid username or password'}), 401
+
+#     # Set expiration time to 15 minutes
+#     expiration_time = datetime.utcnow() + timedelta(minutes=15)
+
+#     # Generate JWT token with user ID and expiration claim
+#     token = jwt.encode({'user_id': user.id, 'exp': expiration_time}, app.config['SECRET_KEY'], algorithm='HS256')
+
+#     return jsonify({'message': 'Login successful', 'token': token})
+#     @app.route('/login', methods=['POST'])
+#     def login_route():
+#         """Binds the login function to the /login POST route."""
+#         return login()
+
+# @app.route('/login', methods=['POST'])
+# def login():
+#     auth = request.authorization
+
+#     # Check if basic authentication credentials are provided
+#     if not auth or not auth.username or not auth.password:
+#         return jsonify({'message': 'Invalid credentials'}), 401
+
+#     # Extract username and password from authentication
+#     username = auth.username
+#     password = auth.password
+
+#     # Find the user by username in the database
+#     user = User.query.filter_by(username=username).first()
+
+#     if not user:
+#         return jsonify({'message': 'Invalid username'}), 401
+
+#     # Check if the password is hashed
+#     if not user.password.startswith('$'):
+#         # If not hashed, hash the password before comparison
+#         if not check_password_hash(user.password, password):
+#             return jsonify({'message': 'Invalid credentials'}), 401
+#     else:
+#         # If already hashed, directly compare the passwords
+#         if not user.check_password(password):
+#             return jsonify({'message': 'Invalid credentials'}), 401
+
+#     # Generate JWT token
+#     token = jwt.encode({'username': username}, app.config['SECRET_KEY'], algorithm='HS256')
+
+#     # Redirect to tenant dashboard if the user is a tenant
+#     if user.type == 'tenant':
+#         return jsonify({'token': token, 'redirect': '/tenant-dashboard'}), 200
+#     # Redirect to landlord dashboard if the user is a landlord
+#     elif user.type == 'landlord':
+#         return jsonify({'token': token, 'redirect': '/landlord-dashboard'}), 200
+#     else:
+#         return jsonify({'message': 'Invalid user type'}), 401
 
 # Protected route example for tenants
 @app.route('/protected/tenant', methods=['GET'])
