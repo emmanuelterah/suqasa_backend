@@ -141,9 +141,9 @@ def token_required(user_type):
 #         finally:
 #             db.session.close()
 
-from flask import request, jsonify
-from werkzeug.security import generate_password_hash
-from .models import db, User  # Assuming your SQLAlchemy model is defined in `models.py`
+# from flask import request, jsonify
+# from werkzeug.security import generate_password_hash
+# from .models import db, User  # Assuming your SQLAlchemy model is defined in `models.py`
 
 @app.route('/register', methods=['POST'])
 def register():
