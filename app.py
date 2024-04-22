@@ -1,7 +1,7 @@
 from flask import Flask, request, Response, jsonify
 from werkzeug.security import check_password_hash
 from datetime import datetime, timedelta
-from models.passwordresettoken import PasswordResetToken
+# from models.passwordresettoken import PasswordResetToken
 from models.dbmodels import db
 from models.property import Property
 from models.landlord import Landlord
@@ -41,7 +41,7 @@ CORS(app)
 #     "DB_URI", f"sqlite:///{os.path.join(BASE_DIR, 'app.db')}")
 
 # Configure the database URI
-app.config['SQLALCHEMY_DATABASE_URI'] ="postgresql://admin:x3XljGxcsxwDN4tJxWzgyXNR8zJelWaW@dpg-coj3scdjm4es73a2610g-a.oregon-postgres.render.com/property_h0nh"
+app.config['SQLALCHEMY_DATABASE_URI'] ="postgresql://admin:QUnioSOEHitFALuT3ACdSYyxLNYx0MGu@dpg-coj6of0cmk4c73afdirg-a.oregon-postgres.render.com/property_elk4"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.json.compact = False
 
@@ -102,6 +102,8 @@ def token_required(user_type):
 #         port='5432'
 #     )
 #     return conn
+
+
 
 @app.route('/register', methods=['POST'])
 def register():
@@ -244,56 +246,50 @@ def protected_route():
 
 
 
+# @app.route('/forgot-password', methods=['POST'])
+# def forgot_password():
+#     data = request.get_json()
+#     username = data.get('username')
 
+#     user = User.query.filter_by(username=username).first()
 
+#     if user:
+#         # Generate a random token
+#         token = ''.join(random.choices(string.ascii_letters + string.digits, k=20))
 
-
-
-
-@app.route('/forgot-password', methods=['POST'])
-def forgot_password():
-    data = request.get_json()
-    username = data.get('username')
-
-    user = User.query.filter_by(username=username).first()
-
-    if user:
-        # Generate a random token
-        token = ''.join(random.choices(string.ascii_letters + string.digits, k=20))
-
-        # Set token expiration time (e.g., 1 hour)
-        expiration = datetime.now() + timedelta(hours=1)
-        print(token)
-        print(expiration)
-        # Create a new reset token
-        reset_token = PasswordResetToken(user_id=user.id, token=token, expiration=expiration)
-        db.session.add(reset_token)
-        db.session.commit()
+#         # Set token expiration time (e.g., 1 hour)
+#         expiration = datetime.now() + timedelta(hours=1)
+#         print(token)
+#         print(expiration)
+#         # Create a new reset token
+#         reset_token = PasswordResetToken(user_id=user.id, token=token, expiration=expiration)
+#         db.session.add(reset_token)
+#         db.session.commit()
 
        
 
-        return jsonify({'message': 'Password reset token generated successfully'})
+#         return jsonify({'message': 'Password reset token generated successfully'})
 
-    return jsonify({'message': 'User not found'}), 404
+#     return jsonify({'message': 'User not found'}), 404
 
-@app.route('/reset-password/<token>', methods=['POST'])
-def reset_password(token):
-    data = request.get_json()
-    new_password = data.get('new_password')
+# @app.route('/reset-password/<token>', methods=['POST'])
+# def reset_password(token):
+#     data = request.get_json()
+#     new_password = data.get('new_password')
 
-    reset_token = PasswordResetToken.query.filter_by(token=token).first()
+#     reset_token = PasswordResetToken.query.filter_by(token=token).first()
 
-    if reset_token and reset_token.expiration > datetime.now():
-        user = User.query.filter_by(id=reset_token.user_id).first()
-        hashed_password = generate_password_hash(new_password, method='sha256')
-        user.password = hashed_password
+#     if reset_token and reset_token.expiration > datetime.now():
+#         user = User.query.filter_by(id=reset_token.user_id).first()
+#         hashed_password = generate_password_hash(new_password, method='sha256')
+#         user.password = hashed_password
 
-        db.session.delete(reset_token)
-        db.session.commit()
+#         db.session.delete(reset_token)
+#         db.session.commit()
 
-        return jsonify({'message': 'Password reset successful'})
+#         return jsonify({'message': 'Password reset successful'})
 
-    return jsonify({'message': 'Invalid or expired reset token'}), 400
+#     return jsonify({'message': 'Invalid or expired reset token'}), 400
 
 
 # Protected route example for tenants
