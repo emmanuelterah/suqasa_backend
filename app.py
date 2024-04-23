@@ -27,6 +27,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
 import sqlite3
 import psycopg2
+import traceback
 
 
 app = Flask(
@@ -144,109 +145,6 @@ def register():
         db.session.close()
 
 
-# @app.route('/login', methods=['POST'])
-# def login():
-#     data = request.get_json()
-#     username = data.get('username')
-#     password = data.get('password')
-
-#     user = User.query.filter_by(username=username).first()
-
-#     if user and check_password_hash(user.password, password):
-
-#         expiration_time = datetime.utcnow() + timedelta(hours=1)
-#         # Generate the JWT token with the 'exp' claim
-#         token = jwt.encode({'user_id': user.id, 'exp': expiration_time}, secret_key, algorithm='HS256')
-#         print(token)
-#         return jsonify({'message': 'Login successful', 'token': token})
-#     else:
-#         return jsonify({'message': 'Invalid username or password'}), 401
-    
-# # Helper function to decode the token
-# def decode_token(token):
-#     try:
-#         payload = jwt.decode(token, secret_key, algorithms=['HS256'])
-#         return payload
-#     except jwt.ExpiredSignatureError:
-#         return 'Token has expired. Please log in again.'
-#     except jwt.InvalidTokenError:
-#         return 'Invalid token. Please log in again.'
-    
-# @app.route('/protected', methods=['GET'])
-# def protected_route():
-#     token = request.headers.get('Authorization')
-
-#     if not token:
-#         return jsonify({'message': 'Token is missing'}), 401
-
-#     token = token.split(' ')[1]  # Extract the token from the 'Authorization' header
-
-#     # Decode the token
-#     payload = decode_token(token)
-
-#     if isinstance(payload, str):
-#         return jsonify({'message': payload}), 401
-
-#     user_id = payload.get('user_id')
-    
-#     # Now you have the user ID, and you can perform further authorization logic
-#     # Check if the user has the necessary permissions, etc.
-#     # the process 
-#     return jsonify({'message': 'Access granted'}), 200
-
-
-# @app.route('/login', methods=['POST'])
-# def login():
-#     data = request.get_json()
-#     username = data.get('username')
-#     password = data.get('password')
-
-#     user = User.query.filter_by(username=username).first()
-
-#     if user and check_password_hash(user.password, password):
-
-#         expiration_time = datetime.utcnow() + timedelta(hours=1)
-#         # Generate the JWT token with the 'exp' claim
-#         token = jwt.encode({'user_id': user.id, 'exp': expiration_time}, secret_key, algorithm='HS256')
-#         print(token)
-#         return jsonify({'message': 'Login successful', 'token': token})
-#     else:
-#         return jsonify({'message': 'Invalid username or password'}), 401
-
-
-# def decode_token(token):
-#     try:
-#         payload = jwt.decode(token, secret_key, algorithms=['HS256'])
-#         return payload
-#     except jwt.ExpiredSignatureError:
-#         return 'Token has expired. Please log in again.'
-#     except jwt.InvalidTokenError:
-#         return 'Invalid token. Please log in again.'
-
-
-# @app.route('/login', methods=['POST'])
-# def login():
-#     try:
-#         data = request.get_json()
-#         username = data.get('username')
-#         password = data.get('password')
-
-#         if not username or not password:
-#             return jsonify({'message': 'Missing username or password'}), 400
-
-#         user = User.query.filter_by(username=username).first()
-
-#         if not user or not check_password_hash(user.password, password):
-#             return jsonify({'message': 'Invalid username or password'}), 401
-
-#         expiration_time = datetime.utcnow() + timedelta(hours=1)
-#         token = jwt.encode({'user_id': user.id, 'exp': expiration_time}, secret_key, algorithm='HS256')
-
-#         return jsonify({'message': 'Login successful', 'token': token})
-#     except Exception as e:
-#         print(f"Login error: {e}")
-#         return jsonify({'message': 'Internal server error'}), 500
-
 @app.route('/login', methods=['POST'])
 def login():
     try:
@@ -268,7 +166,9 @@ def login():
         return jsonify({'message': 'Login successful', 'token': token})
     except Exception as e:
         print(f"Login error: {e}")
+        traceback.print_exc()  # Print traceback for detailed error information
         return jsonify({'message': 'Internal server error'}), 500
+
 # jj
 
 def decode_token(token):
