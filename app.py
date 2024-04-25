@@ -1,4 +1,7 @@
 from flask import Flask, request, Response, jsonify
+from werkzeug.security import check_password_hash
+from datetime import datetime, timedelta
+# from models.passwordresettoken import PasswordResetToken
 from models.dbmodels import db
 from models.property import Property
 from models.landlord import Landlord
@@ -8,9 +11,23 @@ from models.payment import Payment
 from models.tenant import Tenant
 from flask_migrate import Migrate
 from datetime import datetime
+from models.user import User
+import base64
+import random
+import string
+# from flasgger import Swagger
+from flask_cors import CORS
 from dotenv import load_dotenv
 load_dotenv()
+
+
 import os 
+import jwt
+from werkzeug.security import generate_password_hash, check_password_hash
+from functools import wraps
+import sqlite3
+import psycopg2
+import traceback
 
 
 app = Flask(
@@ -19,21 +36,248 @@ app = Flask(
     # static_folder='../client/build',
     # template_folder='../client/build'
 )
+CORS(app)
+
+# BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+# DATABASE = os.environ.get(
+#     "DB_URI", f"sqlite:///{os.path.join(BASE_DIR, 'app.db')}")
 
 # Configure the database URI
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URI')
+app.config['SQLALCHEMY_DATABASE_URI'] ="postgresql://admin:QUnioSOEHitFALuT3ACdSYyxLNYx0MGu@dpg-coj6of0cmk4c73afdirg-a.oregon-postgres.render.com/property_elk4"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.json.compact = False
 
+secret_key = base64.b64encode(os.urandom(24)).decode('utf-8')
+print(secret_key)
 # Initialize the database
 db.init_app(app)
 
 # # Initialize Flask-Migrate
 # migrate = Migrate(app, db)
 
-# # # Create the database tables
-# with app.app_context():
-#     db.create_all()
+
+users = {
+    "tenant1": {
+        "password": generate_password_hash("password1"),
+        "type": "tenant"
+    },
+    "landlord1": {
+        "password": generate_password_hash("password2"),
+        "type": "landlord"
+    }
+}
+
+
+def token_required(user_type):
+    def decorator(f):
+        @wraps(f)
+        def decorated(*args, **kwargs):
+            token = request.headers.get('Authorization')
+
+            if not token:
+                return jsonify({'message': 'Token is missing'}), 401
+
+            try:
+                data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
+                current_user = data['username']
+                if users[current_user]['type'] != user_type:
+                    raise Exception("Unauthorized access")
+            except Exception as e:
+                return jsonify({'message': str(e)}), 401
+
+            return f(current_user, *args, **kwargs)
+
+        return decorated
+    return decorator
+
+# # Connect to your database
+# def connect_db():
+#     conn = sqlite3.connect('app.db')
+#     return conn
+
+# def connect_db():
+#     conn = psycopg2.connect(
+#         dbname='property_management_285e',
+#         user='property_management_285e_user',
+#         password='236h6am7uok3sE85JlzrPBH6OLQL9KYO',
+#         host='localhost',
+#         port='5432'
+#     )
+#     return conn
+
+
+
+@app.route('/register', methods=['POST'])
+def register():
+
+    data = request.get_json()
+
+    # Check if required fields are present
+    if not all(key in data for key in ('username', 'email', 'password', 'user_type')):
+        return jsonify({'message': 'Missing required fields'}), 400
+
+    # Extract data from JSON
+    username = data['username']
+    email = data['email']
+    password = data['password']
+    user_type = data['user_type']
+
+    # Check if username already exists
+    existing_user = User.query.filter_by(username=username).first()
+    if existing_user:
+        return jsonify({'message': 'Username already exists'}), 409
+
+    # Hash the password
+    hashed_password = generate_password_hash(password)
+
+    # Create a new user instance
+    new_user = User(username=username, email=email, password=hashed_password, user_type=user_type)
+
+    # Add user to the database
+    try:
+        db.session.add(new_user)
+        db.session.commit()
+        return jsonify({'message': 'User registered successfully'}), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'message': 'Error registering user: {}'.format(str(e))}), 500
+    finally:
+        db.session.close()
+
+
+@app.route('/login', methods=['POST'])
+def login():
+    try:
+        data = request.get_json()
+        username = data.get('username')
+        password = data.get('password')
+
+        if not username or not password:
+            return jsonify({'message': 'Missing username or password'}), 400
+
+        user = User.query.filter_by(username=username).first()
+
+        if not user or not check_password_hash(user.password, password):
+            return jsonify({'message': 'Invalid username or password'}), 401
+
+        expiration_time = datetime.utcnow() + timedelta(hours=1)
+        token = jwt.encode({'user_id': user.id, 'exp': expiration_time}, secret_key, algorithm='HS256')
+
+        return jsonify({'message': 'Login successful', 'token': token})
+    except Exception as e:
+        print(f"Login error: {e}")
+        traceback.print_exc()  # Print traceback for detailed error information
+        return jsonify({'message': 'Internal server error'}), 500
+
+# jj
+
+def decode_token(token):
+    try:
+        payload = jwt.decode(token, secret_key, algorithms=['HS256'])
+        return payload
+    except jwt.ExpiredSignatureError:
+        return 'Token has expired. Please log in again.'
+    except jwt.InvalidTokenError:
+        return 'Invalid token. Please log in again.'
+    except jwt.JWTException as e:
+        print(f"Token decoding error: {e}")
+        return 'Invalid token.'
+
+
+
+@app.route('/protected', methods=['GET'])
+def protected_route():
+    token = request.headers.get('Authorization')
+
+    if not token:
+        return jsonify({'message': 'Token is missing'}), 401
+
+    token = token.split(' ')[1]  # Extract the token from the 'Authorization' header
+
+    # Decode the token
+    payload = decode_token(token)
+
+    if isinstance(payload, str):
+        return jsonify({'message': payload}), 401
+
+    user_id = payload.get('user_id')
+
+    # Now you have the user ID, and you can perform further authorization logic
+    # Check if the user has the necessary permissions, etc.
+    # the process 
+    return jsonify({'message': 'Access granted'}), 200
+
+
+
+# @app.route('/forgot-password', methods=['POST'])
+# def forgot_password():
+#     data = request.get_json()
+#     username = data.get('username')
+
+#     user = User.query.filter_by(username=username).first()
+
+#     if user:
+#         # Generate a random token
+#         token = ''.join(random.choices(string.ascii_letters + string.digits, k=20))
+
+#         # Set token expiration time (e.g., 1 hour)
+#         expiration = datetime.now() + timedelta(hours=1)
+#         print(token)
+#         print(expiration)
+#         # Create a new reset token
+#         reset_token = PasswordResetToken(user_id=user.id, token=token, expiration=expiration)
+#         db.session.add(reset_token)
+#         db.session.commit()
+
+       
+
+#         return jsonify({'message': 'Password reset token generated successfully'})
+
+#     return jsonify({'message': 'User not found'}), 404
+
+# @app.route('/reset-password/<token>', methods=['POST'])
+# def reset_password(token):
+#     data = request.get_json()
+#     new_password = data.get('new_password')
+
+#     reset_token = PasswordResetToken.query.filter_by(token=token).first()
+
+#     if reset_token and reset_token.expiration > datetime.now():
+#         user = User.query.filter_by(id=reset_token.user_id).first()
+#         hashed_password = generate_password_hash(new_password, method='sha256')
+#         user.password = hashed_password
+
+#         db.session.delete(reset_token)
+#         db.session.commit()
+
+#         return jsonify({'message': 'Password reset successful'})
+
+#     return jsonify({'message': 'Invalid or expired reset token'}), 400
+
+
+# Protected route example for tenants
+@app.route('/protected/tenant', methods=['GET'])
+@token_required('tenant')
+def protected_tenant(current_user):
+    return jsonify({'message': 'Hello, {}! This is a protected tenant route.'.format(current_user)}), 200
+
+# Protected route example for landlords
+@app.route('/protected/landlord', methods=['GET'])
+@token_required('landlord')
+def protected_landlord(current_user):
+    return jsonify({'message': 'Hello, {}! This is a protected landlord route.'.format(current_user)}), 200
+
+
+
+
+
+
+
+
+
+
+
+
 # Welcome route
 @app.route("/")
 def index():
@@ -191,7 +435,7 @@ def update_property(property_id):
     if 'description' in data:
         property.description = data['description']
     if 'Bedrooms' in data:
-        property.Bedrooms = data['Bedrooms']
+        property.Bedrooms = data['Bedrooms'] 
     if 'image' in data:
         property.image = data['image']
     if 'Size' in data:
