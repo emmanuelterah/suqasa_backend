@@ -171,6 +171,17 @@ def register():
 
 # jj
 
+# Define dashboard routes
+@app.route('/landlord_dashboard')
+def landlord_dashboard():
+    # Handle Landlord Dashboard logic here
+    return jsonify({'message': 'Welcome to Landlord Dashboard'})
+
+@app.route('/tenant_dashboard')
+def tenant_dashboard():
+    # Handle Tenant Dashboard logic here
+    return jsonify({'message': 'Welcome to Tenant Dashboard'})
+
 @app.route('/login', methods=['POST'])
 def login():
     try:
@@ -187,12 +198,13 @@ def login():
             return jsonify({'message': 'Invalid username or password'}), 401
 
         # Determine user type and set dashboard accordingly
-        dashboard_route = '/landlord_dashboard' if user.user_type == 'Landlord' else '/tenant_dashboard'
+        dashboard_route = 'landlord_dashboard' if user.user_type == 'Landlord' else 'tenant_dashboard'
 
         expiration_time = datetime.utcnow() + timedelta(hours=1)
         token = jwt.encode({'user_id': user.id, 'exp': expiration_time}, app.config['SECRET_KEY'], algorithm='HS256')
 
-        return jsonify({'message': 'Login successful', 'token': token, 'dashboard_route': dashboard_route})
+        # Redirect to dashboard route
+        return redirect(url_for(dashboard_route))
     except Exception as e:
         print(f"Login error: {e}")
         traceback.print_exc()  # Print traceback for detailed error information
