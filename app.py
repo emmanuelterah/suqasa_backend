@@ -1,4 +1,4 @@
-from flask import Flask, request, Response, jsonify, redirect, url_for
+from flask import Flask, request, Response, jsonify
 from werkzeug.security import check_password_hash
 from datetime import datetime, timedelta
 # from models.passwordresettoken import PasswordResetToken
@@ -145,43 +145,6 @@ def register():
         db.session.close()
 
 
-# @app.route('/login', methods=['POST'])
-# def login():
-#     try:
-#         data = request.get_json()
-#         username = data.get('username')
-#         password = data.get('password')
-
-#         if not username or not password:
-#             return jsonify({'message': 'Missing username or password'}), 400
-
-#         user = User.query.filter_by(username=username).first()
-
-#         if not user or not check_password_hash(user.password, password):
-#             return jsonify({'message': 'Invalid username or password'}), 401
-
-#         expiration_time = datetime.utcnow() + timedelta(hours=1)
-#         token = jwt.encode({'user_id': user.id, 'exp': expiration_time}, secret_key, algorithm='HS256')
-
-#         return jsonify({'message': 'Login successful', 'token': token})
-#     except Exception as e:
-#         print(f"Login error: {e}")
-#         traceback.print_exc()  # Print traceback for detailed error information
-#         return jsonify({'message': 'Internal server error'}), 500
-
-# jj
-
-# Define dashboard routes
-@app.route('/landlord_dashboard')
-def landlord_dashboard():
-    # Handle Landlord Dashboard logic here
-    return jsonify({'message': 'Welcome to Landlord Dashboard'})
-
-@app.route('/tenant_dashboard')
-def tenant_dashboard():
-    # Handle Tenant Dashboard logic here
-    return jsonify({'message': 'Welcome to Tenant Dashboard'})
-
 @app.route('/login', methods=['POST'])
 def login():
     try:
@@ -197,18 +160,16 @@ def login():
         if not user or not check_password_hash(user.password, password):
             return jsonify({'message': 'Invalid username or password'}), 401
 
-        # Determine user type and set dashboard accordingly
-        dashboard_route = 'landlord_dashboard' if user.user_type == 'Landlord' else 'tenant_dashboard'
-
         expiration_time = datetime.utcnow() + timedelta(hours=1)
-        token = jwt.encode({'user_id': user.id, 'exp': expiration_time}, app.config['SECRET_KEY'], algorithm='HS256')
+        token = jwt.encode({'user_id': user.id, 'exp': expiration_time}, secret_key, algorithm='HS256')
 
-        # Redirect to dashboard route
-        return redirect(url_for(dashboard_route))
+        return jsonify({'message': 'Login successful', 'token': token})
     except Exception as e:
         print(f"Login error: {e}")
         traceback.print_exc()  # Print traceback for detailed error information
         return jsonify({'message': 'Internal server error'}), 500
+
+# jj
 
 def decode_token(token):
     try:
