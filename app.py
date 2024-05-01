@@ -145,6 +145,31 @@ def register():
         db.session.close()
 
 
+# @app.route('/login', methods=['POST'])
+# def login():
+#     try:
+#         data = request.get_json()
+#         username = data.get('username')
+#         password = data.get('password')
+
+#         if not username or not password:
+#             return jsonify({'message': 'Missing username or password'}), 400
+
+#         user = User.query.filter_by(username=username).first()
+
+#         if not user or not check_password_hash(user.password, password):
+#             return jsonify({'message': 'Invalid username or password'}), 401
+
+#         expiration_time = datetime.utcnow() + timedelta(hours=1)
+#         token = jwt.encode({'user_id': user.id, 'exp': expiration_time}, secret_key, algorithm='HS256')
+
+#         return jsonify({'message': 'Login successful', 'token': token})
+#     except Exception as e:
+#         print(f"Login error: {e}")
+#         traceback.print_exc()  # Print traceback for detailed error information
+#         return jsonify({'message': 'Internal server error'}), 500
+
+	
 @app.route('/login', methods=['POST'])
 def login():
     try:
@@ -152,22 +177,22 @@ def login():
         username = data.get('username')
         password = data.get('password')
 
-        if not username or not password:
-            return jsonify({'message': 'Missing username or password'}), 400
+    if not username or not password:
+        return jsonify({'message': 'Missing username or password'}), 400
 
-        user = User.query.filter_by(username=username).first()
+    user = User.query.filter_by(username=username).first()
 
-        if not user or not check_password_hash(user.password, password):
-            return jsonify({'message': 'Invalid username or password'}), 401
+    if not user or not check_password_hash(user.password, password):
+        return jsonify({'message': 'Invalid username or password'}), 401
 
-        expiration_time = datetime.utcnow() + timedelta(hours=1)
-        token = jwt.encode({'user_id': user.id, 'exp': expiration_time}, secret_key, algorithm='HS256')
+    expiration_time = datetime.utcnow() + timedelta(hours=1)
+    token = jwt.encode({'user_id': user.id, 'user_type': user.user_type, 'exp': expiration_time}, secret_key, algorithm='HS256')
 
-        return jsonify({'message': 'Login successful', 'token': token})
-    except Exception as e:
-        print(f"Login error: {e}")
-        traceback.print_exc()  # Print traceback for detailed error information
-        return jsonify({'message': 'Internal server error'}), 500
+    return jsonify({'message': 'Login successful', 'token': token, 'user_type': user.user_type})
+except Exception as e:
+    print(f"Login error: {e}")
+    traceback.print_exc()  # Print traceback for detailed error information
+    return jsonify({'message': 'Internal server error'}), 500
 
 # jj
 
