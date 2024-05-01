@@ -145,6 +145,32 @@ def register():
         db.session.close()
 
 
+# @app.route('/login', methods=['POST'])
+# def login():
+#     try:
+#         data = request.get_json()
+#         username = data.get('username')
+#         password = data.get('password')
+
+#         if not username or not password:
+#             return jsonify({'message': 'Missing username or password'}), 400
+
+#         user = User.query.filter_by(username=username).first()
+
+#         if not user or not check_password_hash(user.password, password):
+#             return jsonify({'message': 'Invalid username or password'}), 401
+
+#         expiration_time = datetime.utcnow() + timedelta(hours=1)
+#         token = jwt.encode({'user_id': user.id, 'exp': expiration_time}, secret_key, algorithm='HS256')
+
+#         return jsonify({'message': 'Login successful', 'token': token})
+#     except Exception as e:
+#         print(f"Login error: {e}")
+#         traceback.print_exc()  # Print traceback for detailed error information
+#         return jsonify({'message': 'Internal server error'}), 500
+
+# jj
+
 @app.route('/login', methods=['POST'])
 def login():
     try:
@@ -160,16 +186,17 @@ def login():
         if not user or not check_password_hash(user.password, password):
             return jsonify({'message': 'Invalid username or password'}), 401
 
-        expiration_time = datetime.utcnow() + timedelta(hours=1)
-        token = jwt.encode({'user_id': user.id, 'exp': expiration_time}, secret_key, algorithm='HS256')
+        # Determine user type and set dashboard accordingly
+        dashboard_route = '/landlord_dashboard' if user.user_type == 'Landlord' else '/tenant_dashboard'
 
-        return jsonify({'message': 'Login successful', 'token': token})
+        expiration_time = datetime.utcnow() + timedelta(hours=1)
+        token = jwt.encode({'user_id': user.id, 'exp': expiration_time}, app.config['SECRET_KEY'], algorithm='HS256')
+
+        return jsonify({'message': 'Login successful', 'token': token, 'dashboard_route': dashboard_route})
     except Exception as e:
         print(f"Login error: {e}")
         traceback.print_exc()  # Print traceback for detailed error information
         return jsonify({'message': 'Internal server error'}), 500
-
-# jj
 
 def decode_token(token):
     try:
